@@ -1,0 +1,117 @@
+buildscript {
+    def versionMajor = 1
+    def versionMinor = 1
+    def versionPatch = 2
+    ext {
+        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+        appName = "TAK Tools"
+    }
+
+    dependencies {
+        classpath 'org.jetbrains.dokka:dokka-gradle-plugin:0.10.1'
+    }
+
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.20'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.beryx.runtime' version '1.8.1'
+}
+
+group 'net.joeaustin.taktools'
+version "$versionName"
+applicationName = "$appName"
+
+javafx {
+    version = "15"
+    modules = ['javafx.graphics', 'javafx.controls', 'javafx.fxml', 'javafx.media', 'javafx.swing']
+}
+
+allprojects {
+    apply plugin: 'idea'
+    idea {
+        module {
+            outputDir = file("build/production/classes")
+            inheritOutputDirs = true
+        }
+    }
+}
+
+sourceSets {
+    main {
+        output.resourcesDir = "build/classes/main"
+    }
+    test {
+        output.resourcesDir = "build/classes/kotlin/test"
+    }
+}
+
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'net.joeaustin.easyxml:EasyXml:1.1.2'
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+//https://github.com/FibreFoX/javafx-gradle-plugin
+application {
+    mainClassName = "net.joeaustin.taktools.startup.App"
+    executableDir = "bin"
+    applicationName = "$appName"
+}
+
+runtime {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    modules = [
+            'java.desktop',
+            'java.xml',
+            'jdk.unsupported',
+            'java.scripting',
+            'java.sql',
+            'java.naming',
+            'java.logging',
+            'java.management',
+            'java.compiler']
+
+    jpackage {
+        installerType = "dmg"
+        skipInstaller = false
+        imageName = "$appName"
+
+        if(org.gradle.internal.os.OperatingSystem.current().macOsX) {
+            installerType = "dmg"
+            imageOptions += ['--icon', 'src/main/resources/gui/icon.icns']
+        }
+
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            installerType = 'msi'
+            // imageOptions = ['--win-console']
+            installerOptions = ['--win-per-user-install', '--win-dir-chooser', '--win-menu', '--win-shortcut']
+            imageOptions += ['--icon', 'src/main/resources/gui/icon.ico']
+        }
+    }
+}
+
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': "net.joeaustin.taktools.startup.App",
+                'Application-Name': "$appName"
+        )
+
+    }
+}
